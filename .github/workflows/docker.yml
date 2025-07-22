@@ -1,9 +1,11 @@
 name: Build & Push Docker Image to Docker Hub
-
 on:
-  push:
-    branches:
-      - main  # Change to your desired branch if needed
+  workflow_dispatch:
+
+# on:
+#   push:
+#     branches:
+#       - main  # Change to your desired branch if needed
 
 jobs:
   docker:
