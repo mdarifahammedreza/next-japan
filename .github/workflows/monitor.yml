@@ -1,7 +1,7 @@
 name: Setup Monitoring Stack (Prometheus + Grafana)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   deploy-monitoring:
@@ -26,7 +26,7 @@ jobs:
               sh get-docker.sh
             fi
 
-            echo "🔧 Installing Docker Compose"
+            echo "🔧 Installing Docker Compose if not already installed"
             if ! command -v docker-compose &> /dev/null; then
               sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
@@ -36,7 +36,7 @@ jobs:
             mkdir -p ~/monitoring && cd ~/monitoring
 
             echo "🧾 Creating prometheus.yml config"
-            cat <<EOF > prometheus.yml
+            cat << 'EOF' > prometheus.yml
 global:
   scrape_interval: 15s
 
@@ -47,7 +47,7 @@ scrape_configs:
 EOF
 
             echo "📄 Creating docker-compose.yml"
-            cat <<EOF > docker-compose.yml
+            cat << 'EOF' > docker-compose.yml
 version: '3'
 services:
   prometheus:
