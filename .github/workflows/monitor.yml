@@ -1,42 +1,32 @@
-name: Setup Monitoring Stack (Prometheus + Grafana)
+- name: Connect to EC2 & Deploy Monitoring Stack
+  uses: appleboy/ssh-action@v1.0.3
+  with:
+    host: ${{ secrets.EC2_HOST }}
+    username: ${{ secrets.EC2_USER }}
+    key: ${{ secrets.EC2_SSH_KEY }}
+    script: |
+      echo "🔐 Connected to EC2"
 
-on:
-  workflow_dispatch:  # Manual trigger
+      echo "📦 Updating system packages"
+      sudo apt update -y && sudo apt upgrade -y
 
-jobs:
-  deploy-monitoring:
-    runs-on: ubuntu-latest
+      echo "🐳 Installing Docker if not already installed"
+      if ! command -v docker &> /dev/null; then
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sh get-docker.sh
+      fi
 
-    steps:
-      - name: Connect to EC2 & Deploy Monitoring Stack
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            echo "🔐 Connected to EC2"
+      echo "🔧 Installing Docker Compose if not already installed"
+      if ! command -v docker-compose &> /dev/null; then
+        sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+      fi
 
-            echo "📦 Updating system packages"
-            sudo apt update -y && sudo apt upgrade -y
+      echo "📁 Creating monitoring stack directory"
+      mkdir -p ~/monitoring && cd ~/monitoring
 
-            echo "🐳 Installing Docker if not already installed"
-            if ! command -v docker &> /dev/null; then
-              curl -fsSL https://get.docker.com -o get-docker.sh
-              sh get-docker.sh
-            fi
-
-            echo "🔧 Installing Docker Compose if not already installed"
-            if ! command -v docker-compose &> /dev/null; then
-              sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-              sudo chmod +x /usr/local/bin/docker-compose
-            fi
-
-            echo "📁 Creating monitoring stack directory"
-            mkdir -p ~/monitoring && cd ~/monitoring
-
-            echo "🧾 Creating prometheus.yml config"
-            cat << 'EOF' > prometheus.yml
+      echo "🧾 Creating prometheus.yml config"
+      cat << 'EOF' > prometheus.yml
 global:
   scrape_interval: 15s
 
@@ -46,8 +36,8 @@ scrape_configs:
       - targets: ['localhost:9090']
 EOF
 
-            echo "📄 Creating docker-compose.yml"
-            cat << 'EOF' > docker-compose.yml
+      echo "📄 Creating docker-compose.yml"
+      cat << 'EOF' > docker-compose.yml
 version: '3'
 services:
   prometheus:
@@ -67,8 +57,8 @@ services:
     restart: unless-stopped
 EOF
 
-            echo "🚀 Launching Prometheus & Grafana"
-            docker-compose down || true
-            docker-compose up -d
+      echo "🚀 Launching Prometheus & Grafana"
+      docker-compose down || true
+      docker-compose up -d
 
-            echo "✅ Monitoring stack deployed successfully"
+      echo "✅ Monitoring stack deployed successfully"
