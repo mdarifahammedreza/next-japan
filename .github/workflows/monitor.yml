@@ -6,8 +6,9 @@ on:
 jobs:
   deploy-monitoring:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Connect to EC2 & Deploy Monitoring Stack
+      - name: Deploy Monitoring Stack on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -19,13 +20,13 @@ jobs:
             echo "📦 Updating system packages"
             sudo apt update -y && sudo apt upgrade -y
 
-            echo "🐳 Installing Docker if not already installed"
+            echo "🐳 Installing Docker"
             if ! command -v docker &> /dev/null; then
               curl -fsSL https://get.docker.com -o get-docker.sh
               sh get-docker.sh
             fi
 
-            echo "🔧 Installing Docker Compose if not already installed"
+            echo "🔧 Installing Docker Compose"
             if ! command -v docker-compose &> /dev/null; then
               sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
@@ -34,20 +35,20 @@ jobs:
             echo "📁 Creating monitoring stack directory"
             mkdir -p ~/monitoring && cd ~/monitoring
 
-            echo "🧾 Creating prometheus.yml config"
-            cat > prometheus.yml <<EOF
+            echo "🧾 Writing prometheus.yml"
+            echo '
 global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'prometheus'
+  - job_name: "prometheus"
     static_configs:
-      - targets: ['localhost:9090']
-EOF
+      - targets: ["localhost:9090"]
+' > prometheus.yml
 
-            echo "📄 Creating docker-compose.yml"
-            cat > docker-compose.yml <<EOF
-version: '3'
+            echo "📄 Writing docker-compose.yml"
+            echo '
+version: "3"
 services:
   prometheus:
     image: prom/prometheus:latest
@@ -64,9 +65,9 @@ services:
     ports:
       - "3001:3000"
     restart: unless-stopped
-EOF
+' > docker-compose.yml
 
-            echo "🚀 Launching Prometheus & Grafana"
+            echo "🚀 Starting Prometheus and Grafana"
             docker-compose down || true
             docker-compose up -d
 
