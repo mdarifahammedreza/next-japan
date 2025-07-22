@@ -1,7 +1,7 @@
 name: Deploy Monitoring Stack
 
 on:
-  workflow_dispatch:  # Manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
   deploy-monitoring:
@@ -35,7 +35,7 @@ jobs:
             mkdir -p ~/monitoring && cd ~/monitoring
 
             echo "🧾 Creating prometheus.yml config"
-            cat << 'EOF' > prometheus.yml
+            cat > prometheus.yml <<EOF
 global:
   scrape_interval: 15s
 
@@ -46,7 +46,7 @@ scrape_configs:
 EOF
 
             echo "📄 Creating docker-compose.yml"
-            cat << 'EOF' > docker-compose.yml
+            cat > docker-compose.yml <<EOF
 version: '3'
 services:
   prometheus:
