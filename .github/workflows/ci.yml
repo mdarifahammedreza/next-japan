@@ -41,3 +41,26 @@ jobs:
 
       - name: Push Docker image
         run: docker push meemjarrin/next-japan:latest
+# --- Continuous Deployment (CD) Step for Kubernetes ---
+      # (Optional Bonus Mark)
+      - name: 🚀 CD: Deploy to Kubernetes on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          # Ensure these secrets are correctly set in GitHub repository settings
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu # Default for Ubuntu EC2
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # port: 22 # Default port, can be omitted
+          
+          # Command to update the deployment on the EC2 cluster
+          script: |
+            echo "Starting Kubernetes deployment update in 'ostad' namespace..."
+            
+            # Use 'kubectl set image' to trigger a rolling update
+            # This forces Kubernetes to pull the new 'latest' image
+            kubectl set image deployment/next-japan-deployment next-japan-app=meemjarrin/next-japan:latest -n ostad
+            
+            # Wait for the rollout to complete before finishing the job
+            kubectl rollout status deployment/next-japan-deployment -n ostad
+            
+            echo "Deployment successfully updated."
