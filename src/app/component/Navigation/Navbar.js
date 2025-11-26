@@ -46,7 +46,7 @@ export default function Navbar() {
           {/* Company Name - Desktop/Tablet Only */}
           <div className="hidden md:flex items-center">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-              XYZ Company name 
+              Ostad education ltd
             </h1>
             <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
              
